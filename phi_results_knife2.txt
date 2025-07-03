@@ -1,0 +1,3 @@
+/data/data/com.termux/files/home/Projects/AetherQuanta/Aether-Quanta-Project-/pi_phi_delta_analyzer.py:71: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")
+Analysis complete. Check pi_phi_delta_log_fredcoin.txt for results.
