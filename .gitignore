@@ -15,3 +15,11 @@ node_modules
 
 # Hardhat Ignition default folder for deployments against a local node
 ignition/deployments/chain-31337
+__pycache__/
+*.pyc
+*.db
+coherence_output/
+wallet_output/
+pi_phi_delta_log.txt
+pi_phi_delta_log_fredcoin.txt
+wallet_log.txt
