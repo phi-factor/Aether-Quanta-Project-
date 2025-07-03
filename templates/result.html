@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aether Quanta Analysis Result</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #1a1a2e; 
+            color: #e5e5e5;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: #16213e; 
+            border-radius: 10px; 
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        h1 { color: #00d4ff; text-align: center; }
+        .result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            background-color: #0f3460; 
+            border-radius: 5px;
+        }
+        .error { color: #ff4d4d; font-weight: bold; }
+        .success { color: #00ff99; font-weight: bold; }
+        a { 
+            display: block; 
+            text-align: center; 
+            margin-top: 20px; 
+            color: #00d4ff; 
+            text-decoration: none; 
+        }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Aether Quanta Analysis Result</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ category }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <div class="result">Coherence: {{ result.coherence | round(2) }}</div>
+        <div class="result">AETH Minted: {{ result.aeth_minted | round(1) }}</div>
+        <div class="result">Effective Cost: {{ result.effective_cost | round(2) }}</div>
+        <div class="result">Identity Hash: {{ result.identity_hash }}</div>
+        <a href="{{ url_for('upload_file') }}">Back to Upload</a>
+    </div>
+</body>
+</html>

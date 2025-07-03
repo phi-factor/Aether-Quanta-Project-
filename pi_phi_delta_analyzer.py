@@ -1,103 +1,91 @@
-import numpy as np
 import os
+import numpy as np
 import cv2
-import hashlib
+from Crypto.Hash import SHA256
 from datetime import datetime
-import argparse
-from energy_coherence_score import compute_coherence_score, evaluate_cost
 
-OUTPUT_DIR = "coherence_output"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+# Image path for fredscoin.jpg
+# IMPORTANT: Ensure fredscoin.jpg is in the same directory as this script.
+image_path = '/data/data/com.termux/files/home/Projects/AetherQuanta/Aether-Quanta-Project-/fredscoin.jpg'
 
-def extract_features(image_path):
-    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+# Load and process the image
+def load_image(path):
+    img = cv2.imread(path)
     if img is None:
-        raise ValueError(f"Error: Image not found at '{image_path}'. "
-                         "The Analyzer needs 'something' (an image) to work with.")
-    _, thresh = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY_INV)
-    return np.var(thresh.flatten()) / 1000  # Normalize by dividing by 1000
-def calculate_coherence(entanglement_density):
-    """
-    Delegates the core coherence calculation to the external module.
-    """
-    return compute_coherence_score(entanglement_density)
+        raise ValueError(f"Failed to load image at {path}")
+    return img
 
-def compute_beautimus(coherence):
-    """
-    Computes the Beautimus Rating and the AETH mint amount based on coherence.
-    Handles scalar input.
-    """
-    if coherence > 1.1:  # Adjusted threshold for new coherence scale
-        beautimus = (coherence - 1) * 100  # Scale relative to base 1
-        aeth = (coherence - 1) * 10        # 10 AETH per unit above 1
-    else:
-        beautimus = 0
-        aeth = 0
-    return beautimus, aeth
+# Calculate Entanglement Density (simplified example)
+def calculate_entanglement_density(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    edges = cv2.Canny(gray, 100, 200)
+    # Normalize density by image area to make it less dependent on image size directly
+    density = np.sum(edges) / (img.shape[0] * img.shape[1] * 255) # divide by 255 for max edge value
+    return density * 100 # Scale for better visibility if needed
 
-def verify_identity(id_data):
-    """
-    Simulates an identity verification process, producing an ID hash.
-    """
-    id_hash = hashlib.sha256(id_data.encode()).hexdigest()
-    verification_log_path = os.path.join(OUTPUT_DIR, f"id_verification_{id_hash}.txt")
-    with open(verification_log_path, "w") as f:
-        f.write(f"ID Hash: {id_hash}\nVerified: True (simulated)\nTimestamp: {datetime.now().isoformat()}\n")
-    return id_hash
+# Calculate Coherence and Beautimus Rating
+def calculate_coherence_and_rating(density):
+    coherence = density * 1000  # Arbitrary scaling from log example
+    beautimus_rating = coherence * 0.975  # Example scaling
+    return coherence, beautimus_rating
 
-def pi_phi_delta_analyzer(image_path: str, id_data: str = "Marco:Passport123"):
-    """
-    Main function for the Aether Quanta Analyzer.
-    Processes an image, calculates coherence, verifies identity,
-    computes Beautimus, and determines AETH minting.
-    """
-    print(f"\n--- Aether Quanta Analyzer: Processing '{image_path}' ---")
+# Mint AETH based on coherence
+def mint_aeth(coherence):
+    # Ensure coherence is positive to avoid division by zero or negative costs
+    adjusted_coherence = max(1.0, coherence) 
+    
+    # Original logic for effective_cost was base_cost / (coherence / 1000). Let's refine.
+    # A higher coherence should ideally lead to a lower effective cost per AETH minted.
+    # Let's assume a "base AETH" and "base cost" for simplicity.
+    
+    base_aeth_per_point = 0.1 # Example: 0.1 AETH per point of coherence
+    aeth_minted = max(1.0, adjusted_coherence * base_aeth_per_point) # Minimum 1 AETH
+    
+    # Effective cost: Inverse relationship to coherence. Higher coherence = lower cost per AETH.
+    # Let's say a 'unit cost' that scales with inverse of coherence
+    unit_cost_factor = 100 / (adjusted_coherence / 100) # Example: Inverse proportional to scaled coherence
+    effective_cost = unit_cost_factor / aeth_minted if aeth_minted > 0 else 0 
+    
+    return aeth_minted, effective_cost
+
+
+# Generate Identity Hash
+def generate_identity_hash(img):
+    hash_obj = SHA256.new()
+    hash_obj.update(img.tobytes())
+    return hash_obj.hexdigest()
+
+# Main analysis function
+def analyze_image():
     try:
-        entanglement_density = extract_features(image_path)
-        coherence = calculate_coherence(entanglement_density)
-        id_hash = verify_identity(id_data)
-        beautimus, aeth = compute_beautimus(coherence)
+        # Load image
+        img = load_image(image_path)
+        
+        # Calculate metrics
+        density = calculate_entanglement_density(img)
+        coherence, beautimus_rating = calculate_coherence_and_rating(density)
+        aeth_minted, effective_cost = mint_aeth(coherence)
+        identity_hash = generate_identity_hash(img)
 
-        # Evaluate effective cost (optional, for logging)
-        base_cost = 100.0
-        effective_cost = evaluate_cost(base_cost, coherence)
+        # Log output
+        timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")
+        with open("pi_phi_delta_log_fredcoin.txt", "w") as log_file:
+            log_file.write("--- Aether Quanta Analyzer: Processing '{}'\n".format(image_path))
+            log_file.write("Nexus Log (Timestamp: {}):\n".format(timestamp))
+            log_file.write(f"  Input Image: {image_path}\n")
+            log_file.write(f"  Entanglement Density: {density:.4f}\n")
+            log_file.write(f"  Calculated Coherence: {coherence:.4f}\n")
+            log_file.write(f"  Beautimus Rating: {beautimus_rating:.1f}\n")
+            log_file.write(f"  AETH Minted: {aeth_minted:.1f}\n")
+            log_file.write(f"  Effective Cost: {effective_cost:.2f}\n")
+            log_file.write(f"  Identity Hash: {identity_hash}\n")
+            log_file.write("--- Analysis Complete ---\n")
 
-        log_message = (
-            f"Nexus Log (Timestamp: {datetime.now().isoformat()}):\n"
-            f"  Input Image: '{image_path}' (Your 'something')\n"
-            f"  Entanglement Density: {entanglement_density:.4f}\n"
-            f"  Calculated Coherence: {coherence:.4f}\n"
-            f"  Beautimus Rating: {beautimus:.1f}\n"
-            f"  AETH Minted: {aeth:.1f}\n"
-            f"  Effective Cost: {effective_cost:.2f}\n"
-            f"  Identity Hash: {id_hash}\n"
-            f"--- Analysis Complete ---"
-        )
-        print(log_message)
+        print("Analysis complete. Check pi_phi_delta_log_fredcoin.txt for results.")
 
-        with open(os.path.join(OUTPUT_DIR, "coherence_log.txt"), "w") as f:
-            f.write(log_message + "\n\n")
-
-        return coherence, beautimus, aeth, id_hash
-
-    except ValueError as e:
-        print(f"Analyzer Error: {e}")
-        print("Please ensure you have an input 'something' (image) to analyze.")
-        return 0.0, 0.0, 0.0, "ERROR"
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return 0.0, 0.0, 0.0, "ERROR"
-
-def main():
-    parser = argparse.ArgumentParser(description="Aether Quanta Analyzer - Mint AETH from visual coherence!")
-    parser.add_argument("--image", type=str, 
-                        default="/data/data/com.termux/files/home/Projects/AetherQuanta/Aether-Quanta-Project/mint0.jpg", 
-                        help="Path to the input image file for coherence analysis.")
-    parser.add_argument("--id_data", type=str, default="Marco:Passport123",
-                        help="Identifier data for simulated identity verification (e.g., your unique ID).")
-    args = parser.parse_args()
-
-    pi_phi_delta_analyzer(image_path=args.image, id_data=args.id_data)
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
-    main()
+    analyze_image()
+

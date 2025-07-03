@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aether Quanta Analyzer</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #1a1a2e; 
+            color: #e5e5e5;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: #16213e; 
+            border-radius: 10px; 
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        h1 { color: #00d4ff; text-align: center; }
+        p { font-size: 1.1em; text-align: center; }
+        .error { color: #ff4d4d; font-weight: bold; }
+        .success { color: #00ff99; font-weight: bold; }
+        form { 
+            text-align: center; 
+            margin-top: 20px; 
+        }
+        input[type="file"] { 
+            margin-bottom: 10px; 
+            padding: 5px; 
+            background-color: #0f3460; 
+            color: #e5e5e5; 
+            border: none; 
+            border-radius: 5px;
+        }
+        input[type="submit"] { 
+            padding: 10px 20px; 
+            background-color: #00d4ff; 
+            color: #16213e; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        input[type="submit"]:hover { background-color: #00b4d8; }
+        .loading { display: none; text-align: center; color: #00ff99; }
+    </style>
+    <script>
+        document.addEventListener('submit', function(e) {
+            document.querySelector('.loading').style.display = 'block';
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Aether Quanta Analyzer</h1>
+        <p>Upload an image (e.g., fredscoin.jpg) to analyze coherence and mint AETH. Supported formats: JPG, PNG.</p>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ category }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="post" enctype="multipart/form-data">
+            <input type="file" name="image" accept="image/jpeg,image/png">
+            <input type="submit" value="Analyze">
+        </form>
+        <p class="loading">Analyzing... Please wait.</p>
+    </div>
+</body>
+</html>
